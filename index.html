@@ -809,9 +809,17 @@
         <span>Dites votre mot d'arrêt à voix haute, ou appuyez sur le bouton ci-dessous, pour arrêter la session immédiatement.</span>
       </div>
 
-      <button class="btn btn-secondary" onclick="goTo('home')">
-        Mettre en pause
-      </button>
+      <div id="peerSafewordBox" style="display:none">
+        <div class="safeword-display" style="background: rgba(244,114,182,0.08); border-color: rgba(244,114,182,0.25);">
+          <span style="font-size: 18px">🔑</span>
+          <div>
+            <div class="label" style="margin-bottom: 2px; color: var(--pink)">Mot d'arrêt de l'autre personne</div>
+            <div class="safeword-word" id="peerSafewordDisplay" style="color: var(--pink)">—</div>
+          </div>
+        </div>
+      </div>
+
+
     </div>
 
     <div class="sos-zone">
@@ -1031,6 +1039,8 @@
       document.getElementById('safewordChosen').textContent = word;
       btn.disabled = false;
       btn.style.opacity = '1';
+      // Partager le mot d'arrêt avec l'autre téléphone
+      sendWS({ type: 'signal', data: { subtype: 'safeword_share', word: word } });
     } else {
       preview.style.display = 'none';
       btn.disabled = true;
@@ -1120,8 +1130,18 @@
         showToast('❌ Session déjà complète');
         break;
       case 'stop_alert':
-        showToast('🛑 L\'autre personne a activé le mot d\'arrêt');
+        playAlarm();
+        showStopAlert(msg.word || '');
         goTo('emergency');
+        break;
+      case 'signal':
+        // Routage des sous-messages
+        if (msg.data && msg.data.subtype === 'safeword_share') {
+          const el = document.getElementById('peerSafewordDisplay');
+          const box = document.getElementById('peerSafewordBox');
+          if (el) el.textContent = msg.data.word;
+          if (box) box.style.display = 'block';
+        }
         break;
       case 'peer_disconnected':
         showToast('⚠️ L\'autre personne s\'est déconnectée');
@@ -1147,7 +1167,47 @@
   }
 
   function sendStop() {
-    sendWS({ type: 'stop' });
+    sendWS({ type: 'stop', word: safeword || '' });
+  }
+
+  function playAlarm() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // 3 bips d'alarme
+      [0, 0.3, 0.6].forEach(delay => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'square';
+        gain.gain.setValueAtTime(0.4, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.25);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.25);
+      });
+    } catch(e) {}
+  }
+
+  function showStopAlert(word) {
+    // Afficher une alerte plein écran temporaire
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(220,38,38,0.95);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-family: Space Grotesk, sans-serif;
+      animation: fadeInAlert 0.2s ease;
+    `;
+    overlay.innerHTML = \`
+      <div style="font-size:64px; margin-bottom:16px;">🛑</div>
+      <div style="font-size:28px; font-weight:700; color:#fff; margin-bottom:8px;">ARRÊT</div>
+      \${word ? \`<div style="font-size:18px; color:rgba(255,255,255,0.85); margin-bottom:8px;">Mot d'arrêt : <b>\${word}</b></div>\` : ''}
+      <div style="font-size:14px; color:rgba(255,255,255,0.7);">L'autre personne a mis fin à la session</div>
+    \`;
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 3500);
   }
   // ── Fin WebSocket ───────────────────────────────────────
 
