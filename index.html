@@ -1213,8 +1213,8 @@
   function showStopAlert(word) {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(220,38,38,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Inter,sans-serif;';
-    const wordLine = word ? '<div style="font-size:18px;color:rgba(255,255,255,0.85);margin-bottom:8px;">Mot d'arrêt : <b>' + word + '</b></div>' : '';
-    overlay.innerHTML = '<div style="font-size:64px;margin-bottom:16px;">🛑</div><div style="font-size:28px;font-weight:700;color:#fff;margin-bottom:8px;">ARRÊT</div>' + wordLine + '<div style="font-size:14px;color:rgba(255,255,255,0.7);">L'autre personne a mis fin à la session</div>';
+    const wordLine = word ? '<div style="font-size:18px;color:rgba(255,255,255,0.85);margin-bottom:8px;">Mot d\'arrêt : <b>' + word + '</b></div>' : '';
+    overlay.innerHTML = '<div style="font-size:64px;margin-bottom:16px;">🛑</div><div style="font-size:28px;font-weight:700;color:#fff;margin-bottom:8px;">ARRÊT</div>' + wordLine + '<div style="font-size:14px;color:rgba(255,255,255,0.7);">L\'autre personne a mis fin à la session</div>';
     document.body.appendChild(overlay);
     setTimeout(function() { overlay.remove(); }, 3500);
   }
