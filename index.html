@@ -642,7 +642,13 @@
 
       <div style="height: 20px"></div>
       <button class="btn btn-primary" onclick="simulatePair()">
-        Simuler connexion de B →
+        Simuler connexion de B (démo) →
+      </button>
+      <div class="separator"></div>
+      <div class="label">Vous avez reçu un code ? Rejoignez ici</div>
+      <input type="text" id="joinCodeInput" placeholder="Code à 4 chiffres..." maxlength="4" inputmode="numeric" style="margin-bottom:10px; text-align:center; font-size:22px; letter-spacing:8px; font-weight:600;">
+      <button class="btn btn-secondary" onclick="joinWithCode()">
+        🔗 Rejoindre la session
       </button>
     </div>
     <div class="bottom-pad"></div>
@@ -809,7 +815,7 @@
     </div>
 
     <div class="sos-zone">
-      <button class="sos-big" onclick="goTo('emergency')">
+      <button class="sos-big" onclick="sendStop(); goTo('emergency')">
         <span>⬡ MOT D'ARRÊT</span>
         <span class="sos-sub">Appuyez pour arrêter immédiatement</span>
       </button>
@@ -907,6 +913,8 @@
       if (secs <= 0) { clearInterval(pairTimerInterval); return; }
       updatePairTimer(secs);
     }, 1000);
+    // Connexion WebSocket réelle
+    createRoom(pairCode);
   }
 
   function updatePairTimer(s) {
@@ -916,9 +924,19 @@
   }
 
   function simulatePair() {
+    // Garder pour démo offline
     document.getElementById('pairStatus').innerHTML = '<span class="badge badge-green">● Connecté</span>';
     showToast('✓ Personne B connectée !');
     setTimeout(() => goTo('video'), 1200);
+  }
+
+  function joinWithCode() {
+    const input = document.getElementById('joinCodeInput');
+    if (!input) return;
+    const code = input.value.replace(/\s/g, '');
+    if (code.length !== 4) { showToast('❌ Code à 4 chiffres requis'); return; }
+    joinRoom(code);
+    showToast('🔗 Connexion en cours...');
   }
 
   function initVideo() {
@@ -1057,6 +1075,81 @@
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 2800);
   }
+
+  // ── WebSocket ──────────────────────────────────────────
+  const SERVER = 'wss://safe-yes.onrender.com';
+  let ws = null;
+  let wsRole = null; // 'a' ou 'b'
+
+  function connectWS(onOpen) {
+    ws = new WebSocket(SERVER);
+    ws.onopen = () => { if (onOpen) onOpen(); };
+    ws.onmessage = (e) => {
+      let msg;
+      try { msg = JSON.parse(e.data); } catch { return; }
+      handleServerMsg(msg);
+    };
+    ws.onerror = () => showToast('⚠️ Connexion serveur impossible — mode démo');
+    ws.onclose = () => { ws = null; };
+  }
+
+  function sendWS(obj) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(obj));
+    }
+  }
+
+  function handleServerMsg(msg) {
+    switch (msg.type) {
+      case 'created':
+        showToast('✓ Salle créée — en attente de l\'autre personne');
+        break;
+      case 'peer_joined':
+        document.getElementById('pairStatus').innerHTML = '<span class="badge badge-green">● Connecté</span>';
+        showToast('✓ Personne B connectée !');
+        setTimeout(() => goTo('video'), 1200);
+        break;
+      case 'joined':
+        showToast('✓ Connecté à la session !');
+        setTimeout(() => goTo('video'), 1200);
+        break;
+      case 'room_not_found':
+        showToast('❌ Code introuvable — vérifie le code');
+        break;
+      case 'room_full':
+        showToast('❌ Session déjà complète');
+        break;
+      case 'stop_alert':
+        showToast('🛑 L\'autre personne a activé le mot d\'arrêt');
+        goTo('emergency');
+        break;
+      case 'peer_disconnected':
+        showToast('⚠️ L\'autre personne s\'est déconnectée');
+        break;
+      case 'error':
+        showToast('❌ Erreur : ' + msg.reason);
+        break;
+    }
+  }
+
+  function createRoom(code) {
+    connectWS(() => {
+      wsRole = 'a';
+      sendWS({ type: 'create', code });
+    });
+  }
+
+  function joinRoom(code) {
+    connectWS(() => {
+      wsRole = 'b';
+      sendWS({ type: 'join', code });
+    });
+  }
+
+  function sendStop() {
+    sendWS({ type: 'stop' });
+  }
+  // ── Fin WebSocket ───────────────────────────────────────
 
   // Splash
   window.addEventListener('load', () => {
