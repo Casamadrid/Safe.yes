@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f0f13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SafeYes</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f13;
+    --bg2: #18181f;
+    --bg3: #22222c;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f5;
+    --text2: #9090a8;
+    --text3: #5a5a72;
+    --accent: #c084fc;
+    --accent2: #a855f7;
+    --accent-glow: rgba(192,132,252,0.18);
+    --accent-dim: rgba(192,132,252,0.1);
+    --pink: #f472b6;
+    --pink-dim: rgba(244,114,182,0.12);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.1);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-pill: 100px;
+  }
+
+  html, body {
+    height: 100%; width: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: 430px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* SCREENS */
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 0 env(safe-area-inset-bottom);
+  }
+  .screen.active { display: flex; }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 56px 24px 16px;
+    position: relative;
+  }
+  .topbar-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .topbar-back {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .topbar-back:hover { background: var(--bg3); color: var(--text); }
+
+  /* PROGRESS STEPS */
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 24px 24px;
+  }
+  .step-bar {
+    flex: 1; height: 3px;
+    border-radius: 2px;
+    background: var(--bg3);
+    transition: background 0.3s;
+  }
+  .step-bar.done { background: var(--accent); }
+  .step-bar.active { background: linear-gradient(90deg, var(--accent), var(--pink)); }
+
+  /* CONTENT AREA */
+  .content { padding: 0 24px; flex: 1; }
+
+  .h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 14px; color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .card-glow {
+    background: linear-gradient(135deg, var(--accent-dim), var(--pink-dim));
+    border-color: rgba(192,132,252,0.2);
+  }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-pill);
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.2px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent2), #9333ea);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(168,85,247,0.3);
+  }
+  .btn-primary:hover { box-shadow: 0 4px 28px rgba(168,85,247,0.45); }
+
+  .btn-secondary {
+    background: var(--bg2);
+    color: var(--text);
+    border: 1px solid var(--border2);
+  }
+  .btn-secondary:hover { background: var(--bg3); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: none;
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(220,38,38,0.3);
+    font-size: 17px;
+    padding: 20px;
+    letter-spacing: 1px;
+  }
+
+  .btn-green {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(22,163,74,0.25);
+  }
+
+  /* INPUT */
+  input[type="text"] {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input[type="text"]::placeholder { color: var(--text3); }
+  input[type="text"]:focus { border-color: var(--accent); }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 12px; font-weight: 500;
+  }
+  .badge-purple { background: var(--accent-dim); color: var(--accent); }
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); }
+
+  /* AVATAR */
+  .avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .avatar-a { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(192,132,252,0.3); }
+  .avatar-b { background: var(--pink-dim); color: var(--pink); border: 1px solid rgba(244,114,182,0.3); }
+
+  /* USER ROW */
+  .user-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+  }
+  .user-info { flex: 1; }
+  .user-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .user-status { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* CODE BOX */
+  .code-display {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .code-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px; font-weight: 700;
+    letter-spacing: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding-right: 14px;
+  }
+  .code-timer { font-size: 12px; color: var(--text3); margin-top: 8px; }
+
+  /* DIVIDER */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0;
+    color: var(--text3);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* SAFEWORD PILL */
+  .safeword-display {
+    background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(251,191,36,0.04));
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .safeword-word {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 1px;
+  }
+
+  /* LIVE SESSION */
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+    50% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(74,222,128,0); }
+  }
+
+  /* SUGGESTIONS */
+  .suggestions {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 20px;
+  }
+  .suggestion-pill {
+    padding: 8px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-pill);
+    font-size: 13px; color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .suggestion-pill:hover, .suggestion-pill.selected {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* VIDEO AREA */
+  .video-frame {
+    width: 100%;
+    aspect-ratio: 9/16;
+    max-height: 260px;
+    background: var(--bg3);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .video-frame video {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .video-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px;
+  }
+  .rec-btn {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .rec-inner {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: var(--red);
+    transition: all 0.2s;
+  }
+  .rec-btn.recording .rec-inner {
+    border-radius: 6px;
+    width: 26px; height: 26px;
+    background: var(--red);
+  }
+  .rec-label { font-size: 13px; color: rgba(255,255,255,0.7); }
+  .rec-timer { font-size: 13px; color: var(--red); font-weight: 600; display: none; }
+
+  /* QUESTION CARD */
+  .question-card {
+    background: rgba(192,132,252,0.08);
+    border: 1px solid rgba(192,132,252,0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .question-label { font-size: 11px; color: var(--accent); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .question-text { font-size: 14px; color: var(--text); line-height: 1.5; }
+
+  /* INFO BOX */
+  .info-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    display: flex; gap: 10px;
+  }
+  .info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* SPLASH */
+  #splash {
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%;
+    position: absolute; inset: 0;
+    z-index: 100;
+    transition: opacity 0.4s;
+  }
+  .splash-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 42px; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  .splash-tag { font-size: 14px; color: var(--text3); }
+
+  /* HOME HERO */
+  .home-hero {
+    padding: 60px 24px 32px;
+    text-align: center;
+  }
+  .home-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .home-tagline { font-size: 15px; color: var(--text2); line-height: 1.6; max-width: 280px; margin: 0 auto 8px; }
+
+  /* SESSION ACTIVE BIG BUTTON */
+  .sos-zone {
+    margin: 16px 24px;
+  }
+  .sos-big {
+    width: 100%;
+    padding: 24px;
+    border-radius: var(--radius);
+    border: 2px solid rgba(248,113,113,0.4);
+    background: rgba(248,113,113,0.07);
+    color: var(--red);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    letter-spacing: 2px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .sos-big:active { transform: scale(0.97); background: rgba(248,113,113,0.14); }
+  .sos-sub { font-size: 12px; font-weight: 400; color: rgba(248,113,113,0.7); letter-spacing: 0.5px; font-family: 'Inter', sans-serif; }
+
+  /* TIMER DISPLAY */
+  .timer-big {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 44px; font-weight: 700;
+    color: var(--green);
+    text-align: center;
+    letter-spacing: 2px;
+  }
+
+  .bottom-pad { height: 32px; flex-shrink: 0; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 0; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-pill);
+    padding: 10px 20px;
+    font-size: 13px; color: var(--text);
+    z-index: 999;
+    animation: toastIn 0.2s ease;
+    white-space: nowrap;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  /* EMERGENCY SCREEN */
+  .emergency-header {
+    background: linear-gradient(180deg, rgba(220,38,38,0.15) 0%, transparent 100%);
+    padding: 60px 24px 24px;
+    text-align: center;
+  }
+  .emergency-icon {
+    font-size: 48px; margin-bottom: 12px;
+  }
+
+  .check-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .check-done { background: var(--green-dim); color: var(--green); }
+  .check-pending { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); }
+
+  .instruction-list { list-style: none; }
+  .instruction-list li {
+    display: flex; gap: 10px;
+    font-size: 13px; color: var(--text2);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .instruction-list li:last-child { border-bottom: none; }
+  .instruction-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .label { font-size: 12px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+  .separator { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* CONFIRMED SCREEN */
+  .confirmed-big {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--green-dim);
+    border: 2px solid var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 20px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="splash">
+    <div class="splash-logo">SafeYes ✦</div>
+    <div class="splash-tag">Consentement mutuel, protégé</div>
+  </div>
+
+  <!-- SCREEN 1 : HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="home-hero">
+      <div class="home-logo">SafeYes ✦</div>
+      <div class="home-tagline">Consentement mutuel, clair, sécurisé — pour vous deux.</div>
+    </div>
+    <div class="content">
+      <button class="btn btn-primary" onclick="goTo('pairing')">
+        ✦ &nbsp;Nouvelle session
+      </button>
+      <button class="btn btn-secondary" onclick="showSessions()">
+        Mes sessions passées
+      </button>
+      <div class="separator"></div>
+      <div class="card">
+        <div class="label">Comment ça marche</div>
+        <ul class="instruction-list">
+          <li><div class="instruction-num">1</div><span>Appairez vos deux téléphones avec un code</span></li>
+          <li><div class="instruction-num">2</div><span>Chacun enregistre sa vidéo de consentement</span></li>
+          <li><div class="instruction-num">3</div><span>Vous définissez un mot d'arrêt ensemble</span></li>
+          <li><div class="instruction-num">4</div><span>La session démarre — vous êtes protégés tous les deux</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="bottom-pad"></div>
+  </div>
+
+  <!-- SCREEN 2 : PAIRING -->
+  <div class="screen" id="screen-pairing">
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('home')">←</div>
+      <div class="topbar-logo">SafeYes</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="steps">
+      <div class="step-bar active"></div>
+      <div class="step-bar"></div>
+      <div class="step-bar"></div>
+      <div class="step-bar"></div>
+    </div>
+    <div class="content">
+      <div class="h2">Connectez vos téléphones</div>
+      <div class="subtitle">Partagez ce code avec l'autre personne. Elle le saisit dans son SafeYes.</div>
+
+      <div class="code-display">
+        <div class="code-number" id="pairCode">—</div>
+        <div class="code-timer" id="pairTimer">Valable 5 min · expire dans <span id="timerCount">4:59</span></div>
+      </div>
+
+      <div class="divider">ou</div>
+
+      <button class="btn btn-secondary" onclick="showToast('📷 QR code — bientôt disponible')">
+        📷 &nbsp;Scanner un QR code
+      </button>
+
+      <div class="separator"></div>
+      <div class="label">Statut de connexion</div>
+
+      <div class="user-row">
+        <div class="avatar avatar-a" id="userA-init">?</div>
+        <div class="user-info">
+          <div class="user-name" id="userA-name">Personne A</div>
+          <div class="user-status"><span class="badge badge-green">● Connecté</span></div>
+        </div>
+      </div>
+      <div class="user-row">
+        <div class="avatar avatar-b">?</div>
+        <div class="user-info">
+          <div class="user-name">Personne B</div>
+          <div class="user-status" id="pairStatus"><span class="badge badge-amber">⏳ En attente...</span></div>
+        </div>
+      </div>
+
+      <div style="height: 20px"></div>
+      <button class="btn btn-primary" onclick="simulatePair()">
+        Simuler connexion de B →
+      </button>
+    </div>
+    <div class="bottom-pad"></div>
+  </div>
+
+  <!-- SCREEN 3 : VIDEO CONSENT -->
+  <div class="screen" id="screen-video">
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('pairing')">←</div>
+      <div class="topbar-logo">SafeYes</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="steps">
+      <div class="step-bar done"></div>
+      <div class="step-bar active"></div>
+      <div class="step-bar"></div>
+      <div class="step-bar"></div>
+    </div>
+    <div class="content">
+      <div class="h2">Votre vidéo de consentement</div>
+      <div class="subtitle">15 secondes. Dites à voix haute les éléments ci-dessous.</div>
+
+      <div class="question-card">
+        <div class="question-label">À dire dans la vidéo</div>
+        <div class="question-text" id="videoScript">
+          "Je m'appelle <b>[prénom nom]</b>, j'ai <b>[âge]</b> ans.<br>
+          Nous sommes le <b id="todayDate"></b>.<br>
+          Mon mot d'arrêt est <b>[votre mot]</b>.<br>
+          Je consens librement à cette relation."
+        </div>
+      </div>
+
+      <div class="question-card" style="background: rgba(244,114,182,0.06); border-color: rgba(244,114,182,0.2);">
+        <div class="question-label" style="color: var(--pink);">Question spontanée</div>
+        <div class="question-text" id="randomQ">Chargement...</div>
+      </div>
+
+      <div class="video-frame" id="videoFrame">
+        <video id="videoPreview" autoplay muted playsinline style="display:none"></video>
+        <div class="video-overlay" id="videoOverlay">
+          <div class="rec-btn" id="recBtn" onclick="toggleRecord()">
+            <div class="rec-inner"></div>
+          </div>
+          <div class="rec-label" id="recLabel">Appuyer pour enregistrer</div>
+          <div class="rec-timer" id="recTimerDisplay">0:00 / 0:15</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <span class="info-icon">🔒</span>
+        <span>La vidéo est stockée uniquement sur cet appareil. Elle ne quitte jamais votre téléphone.</span>
+      </div>
+
+      <div id="videoStatus" style="display:none">
+        <div class="check-item check-done">✓ &nbsp;Votre vidéo est enregistrée</div>
+      </div>
+
+      <button class="btn btn-primary" id="btnNextVideo" onclick="goTo('safeword')" style="display:none">
+        Continuer →
+      </button>
+      <button class="btn btn-ghost" onclick="goTo('safeword')">Passer pour la démo →</button>
+    </div>
+    <div class="bottom-pad"></div>
+  </div>
+
+  <!-- SCREEN 4 : SAFEWORD -->
+  <div class="screen" id="screen-safeword">
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('video')">←</div>
+      <div class="topbar-logo">SafeYes</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="steps">
+      <div class="step-bar done"></div>
+      <div class="step-bar done"></div>
+      <div class="step-bar active"></div>
+      <div class="step-bar"></div>
+    </div>
+    <div class="content">
+      <div class="h2">Mot d'arrêt</div>
+      <div class="subtitle">Choisissez ensemble un mot simple. L'énoncer à voix haute — ou appuyer sur le bouton — arrête immédiatement la session.</div>
+
+      <div class="label">Suggestions</div>
+      <div class="suggestions" id="suggestions">
+        <div class="suggestion-pill" onclick="selectWord('Ananas')">Ananas</div>
+        <div class="suggestion-pill" onclick="selectWord('Rouge')">Rouge</div>
+        <div class="suggestion-pill" onclick="selectWord('Étoile')">Étoile</div>
+        <div class="suggestion-pill" onclick="selectWord('Saphir')">Saphir</div>
+        <div class="suggestion-pill" onclick="selectWord('Liberté')">Liberté</div>
+        <div class="suggestion-pill" onclick="selectWord('Papillon')">Papillon</div>
+      </div>
+
+      <div class="label">Ou choisissez le vôtre</div>
+      <input type="text" id="safewordInput" placeholder="Votre mot personnalisé..." oninput="updateSafeword(this.value)" style="margin-bottom: 16px">
+
+      <div id="safewordPreview" style="display:none">
+        <div class="safeword-display">
+          <span style="font-size: 20px">🔑</span>
+          <div>
+            <div class="label" style="margin-bottom: 2px">Mot d'arrêt choisi</div>
+            <div class="safeword-word" id="safewordChosen">—</div>
+          </div>
+        </div>
+        <div class="info-box">
+          <span class="info-icon">ℹ️</span>
+          <span>Ce mot a été entendu dans votre vidéo. Les deux personnes le connaissent. Il est stocké localement.</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btnStartSession" onclick="goTo('session')" disabled style="opacity:0.4">
+        Démarrer la session ✦
+      </button>
+    </div>
+    <div class="bottom-pad"></div>
+  </div>
+
+  <!-- SCREEN 5 : SESSION ACTIVE -->
+  <div class="screen" id="screen-session">
+    <div class="topbar">
+      <div style="width:36px"></div>
+      <div class="topbar-logo">SafeYes</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="content">
+      <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 20px;">
+        <div class="live-dot"></div>
+        <span style="font-size: 13px; color: var(--green); font-weight: 500;">Session active</span>
+        <span style="font-size: 12px; color: var(--text3); margin-left: auto;" id="sessionTimer">00:00</span>
+      </div>
+
+      <div class="user-row">
+        <div class="avatar avatar-a">A</div>
+        <div class="user-info">
+          <div class="user-name">Personne A</div>
+          <div class="user-status"><span class="badge badge-green">✓ Consentement confirmé</span></div>
+        </div>
+      </div>
+      <div class="user-row">
+        <div class="avatar avatar-b">B</div>
+        <div class="user-info">
+          <div class="user-name">Personne B</div>
+          <div class="user-status"><span class="badge badge-green">✓ Consentement confirmé</span></div>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="safeword-display">
+        <span style="font-size: 18px">🔑</span>
+        <div>
+          <div class="label" style="margin-bottom: 2px">Mot d'arrêt actif</div>
+          <div class="safeword-word" id="activeSafeword">—</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <span class="info-icon">💡</span>
+        <span>Dites votre mot d'arrêt à voix haute, ou appuyez sur le bouton ci-dessous, pour arrêter la session immédiatement.</span>
+      </div>
+
+      <button class="btn btn-secondary" onclick="goTo('home')">
+        Mettre en pause
+      </button>
+    </div>
+
+    <div class="sos-zone">
+      <button class="sos-big" onclick="goTo('emergency')">
+        <span>⬡ MOT D'ARRÊT</span>
+        <span class="sos-sub">Appuyez pour arrêter immédiatement</span>
+      </button>
+    </div>
+    <div class="bottom-pad"></div>
+  </div>
+
+  <!-- SCREEN 6 : EMERGENCY -->
+  <div class="screen" id="screen-emergency">
+    <div class="emergency-header">
+      <div class="emergency-icon">🛑</div>
+      <div class="h2" style="color: var(--red)">Session arrêtée</div>
+      <div class="subtitle" style="margin-bottom: 0">Vous avez activé le mot d'arrêt. La session est suspendue.</div>
+    </div>
+    <div class="content">
+
+      <div class="label">Enregistrez un message maintenant</div>
+      <button class="btn btn-secondary" onclick="showToast('🎤 Enregistrement vocal — bientôt disponible')">
+        🎤 &nbsp;Message vocal
+      </button>
+      <button class="btn btn-secondary" onclick="showToast('📹 Vidéo — bientôt disponible')">
+        📹 &nbsp;Message vidéo
+      </button>
+
+      <div class="separator"></div>
+
+      <div class="label">Si pas de réponse de l'autre personne</div>
+      <button class="btn btn-danger" onclick="showToast('📍 Géolocalisation envoyée au contact de confiance')">
+        📍 &nbsp;Envoyer ma localisation
+      </button>
+      <button class="btn btn-secondary" onclick="showToast('📞 Appel vers contact de confiance')">
+        📞 &nbsp;Appeler mon contact de confiance
+      </button>
+
+      <div class="separator"></div>
+
+      <div class="info-box">
+        <span class="info-icon">🔒</span>
+        <span>Toutes les données de cette session (vidéos, horodatage, localisation) sont chiffrées et stockées sur votre appareil.</span>
+      </div>
+
+      <button class="btn btn-ghost" onclick="goTo('home')">↩ Retour à l'accueil</button>
+    </div>
+    <div class="bottom-pad"></div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+  const QUESTIONS = [
+    "Quelle est votre couleur préférée ?",
+    "Nommez une ville que vous aimez.",
+    "Quel est votre plat préféré ?",
+    "Nommez un animal que vous trouvez beau.",
+    "Quelle saison préférez-vous ?",
+    "Quel sport ou activité aimez-vous ?",
+    "Nommez un pays où vous rêvez d'aller.",
+    "Quel est votre film préféré ?"
+  ];
+
+  let currentScreen = 'home';
+  let pairTimerInterval = null;
+  let sessionTimerInterval = null;
+  let sessionSeconds = 0;
+  let recTimerInterval = null;
+  let recSeconds = 0;
+  let mediaStream = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let safeword = '';
+  let isRecording = false;
+  let pairCode = '';
+
+  function goTo(screen) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screen).classList.add('active');
+    currentScreen = screen;
+
+    if (screen === 'pairing') initPairing();
+    if (screen === 'video') initVideo();
+    if (screen === 'session') startSessionTimer();
+    if (screen === 'home') stopAll();
+    if (screen === 'emergency') stopAll();
+  }
+
+  function initPairing() {
+    pairCode = Math.floor(1000 + Math.random() * 9000).toString();
+    document.getElementById('pairCode').textContent = pairCode.split('').join(' ');
+    document.getElementById('pairStatus').innerHTML = '<span class="badge badge-amber">⏳ En attente...</span>';
+    if (pairTimerInterval) clearInterval(pairTimerInterval);
+    let secs = 299;
+    updatePairTimer(secs);
+    pairTimerInterval = setInterval(() => {
+      secs--;
+      if (secs <= 0) { clearInterval(pairTimerInterval); return; }
+      updatePairTimer(secs);
+    }, 1000);
+  }
+
+  function updatePairTimer(s) {
+    const m = Math.floor(s/60);
+    const sec = s % 60;
+    document.getElementById('timerCount').textContent = m + ':' + String(sec).padStart(2,'0');
+  }
+
+  function simulatePair() {
+    document.getElementById('pairStatus').innerHTML = '<span class="badge badge-green">● Connecté</span>';
+    showToast('✓ Personne B connectée !');
+    setTimeout(() => goTo('video'), 1200);
+  }
+
+  function initVideo() {
+    const d = new Date();
+    const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('todayDate').textContent = d.toLocaleDateString('fr-FR', opts);
+    const q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+    document.getElementById('randomQ').textContent = q;
+  }
+
+  async function toggleRecord() {
+    if (!isRecording) {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+        const video = document.getElementById('videoPreview');
+        video.srcObject = mediaStream;
+        video.style.display = 'block';
+        document.getElementById('videoOverlay').style.background = 'rgba(0,0,0,0.2)';
+        document.getElementById('recBtn').classList.add('recording');
+        document.getElementById('recLabel').textContent = 'Enregistrement...';
+        document.getElementById('recTimerDisplay').style.display = 'block';
+
+        mediaRecorder = new MediaRecorder(mediaStream);
+        recordedChunks = [];
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = saveVideo;
+        mediaRecorder.start();
+        isRecording = true;
+        recSeconds = 0;
+        recTimerInterval = setInterval(() => {
+          recSeconds++;
+          const s = recSeconds % 60;
+          document.getElementById('recTimerDisplay').textContent = '0:' + String(s).padStart(2,'0') + ' / 0:15';
+          if (recSeconds >= 15) stopRecord();
+        }, 1000);
+      } catch(e) {
+        showToast('📷 Caméra non accessible — mode démo');
+        fakeVideoDone();
+      }
+    } else {
+      stopRecord();
+    }
+  }
+
+  function stopRecord() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+    clearInterval(recTimerInterval);
+    isRecording = false;
+    document.getElementById('recBtn').classList.remove('recording');
+    document.getElementById('recLabel').textContent = '✓ Enregistré';
+    document.getElementById('recTimerDisplay').style.display = 'none';
+    fakeVideoDone();
+  }
+
+  function saveVideo() {
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        localStorage.setItem('sy_video_' + Date.now(), 'recorded');
+      } catch(e) {}
+    };
+    reader.readAsDataURL(blob);
+    fakeVideoDone();
+  }
+
+  function fakeVideoDone() {
+    document.getElementById('videoStatus').style.display = 'block';
+    document.getElementById('btnNextVideo').style.display = 'flex';
+  }
+
+  function selectWord(word) {
+    safeword = word;
+    document.getElementById('safewordInput').value = word;
+    document.querySelectorAll('.suggestion-pill').forEach(p => p.classList.remove('selected'));
+    event.target.classList.add('selected');
+    updateSafewordUI(word);
+  }
+
+  function updateSafeword(val) {
+    safeword = val;
+    document.querySelectorAll('.suggestion-pill').forEach(p => p.classList.remove('selected'));
+    updateSafewordUI(val);
+  }
+
+  function updateSafewordUI(word) {
+    const preview = document.getElementById('safewordPreview');
+    const btn = document.getElementById('btnStartSession');
+    if (word.trim().length > 0) {
+      preview.style.display = 'block';
+      document.getElementById('safewordChosen').textContent = word;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    } else {
+      preview.style.display = 'none';
+      btn.disabled = true;
+      btn.style.opacity = '0.4';
+    }
+  }
+
+  function startSessionTimer() {
+    document.getElementById('activeSafeword').textContent = safeword || 'Ananas';
+    sessionSeconds = 0;
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+    updateSessionTimer();
+    sessionTimerInterval = setInterval(() => {
+      sessionSeconds++;
+      updateSessionTimer();
+    }, 1000);
+  }
+
+  function updateSessionTimer() {
+    const m = Math.floor(sessionSeconds / 60);
+    const s = sessionSeconds % 60;
+    document.getElementById('sessionTimer').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  function stopAll() {
+    clearInterval(pairTimerInterval);
+    clearInterval(sessionTimerInterval);
+    clearInterval(recTimerInterval);
+    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+  }
+
+  function showSessions() {
+    showToast('📂 Aucune session sauvegardée pour l\'instant');
+  }
+
+  function showToast(msg) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2800);
+  }
+
+  // Splash
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      splash.style.opacity = '0';
+      setTimeout(() => splash.style.display = 'none', 400);
+    }, 1400);
+  });
+</script>
+</body>
+</html>
