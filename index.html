@@ -574,10 +574,13 @@
       <div class="home-tagline">Consentement mutuel, clair, sécurisé — pour vous deux.</div>
     </div>
     <div class="content">
-      <button class="btn btn-primary" onclick="goTo('pairing')">
-        ✦ &nbsp;Nouvelle session
+      <button class="btn btn-primary" onclick="startAsA()">
+        ✦ &nbsp;Créer une session
       </button>
-      <button class="btn btn-secondary" onclick="showSessions()">
+      <button class="btn btn-secondary" onclick="showJoinScreen()">
+        🔗 &nbsp;Rejoindre une session
+      </button>
+      <button class="btn btn-ghost" onclick="showSessions()">
         Mes sessions passées
       </button>
       <div class="separator"></div>
@@ -616,11 +619,7 @@
         <div class="code-timer" id="pairTimer">Valable 5 min · expire dans <span id="timerCount">4:59</span></div>
       </div>
 
-      <div class="divider">ou</div>
 
-      <button class="btn btn-secondary" onclick="showToast('📷 QR code — bientôt disponible')">
-        📷 &nbsp;Scanner un QR code
-      </button>
 
       <div class="separator"></div>
       <div class="label">Statut de connexion</div>
@@ -641,14 +640,8 @@
       </div>
 
       <div style="height: 20px"></div>
-      <button class="btn btn-primary" onclick="simulatePair()">
-        Simuler connexion de B (démo) →
-      </button>
-      <div class="separator"></div>
-      <div class="label">Vous avez reçu un code ? Rejoignez ici</div>
-      <input type="text" id="joinCodeInput" placeholder="Code à 4 chiffres..." maxlength="4" inputmode="numeric" style="margin-bottom:10px; text-align:center; font-size:22px; letter-spacing:8px; font-weight:600;">
-      <button class="btn btn-secondary" onclick="joinWithCode()">
-        🔗 Rejoindre la session
+      <button class="btn btn-ghost" onclick="simulatePair()">
+        Simuler connexion de B (démo)
       </button>
     </div>
     <div class="bottom-pad"></div>
@@ -870,6 +863,26 @@
     <div class="bottom-pad"></div>
   </div>
 
+  <!-- SCREEN : JOIN (Personne B) -->
+  <div class="screen" id="screen-join">
+    <div class="topbar">
+      <div class="topbar-back" onclick="goTo('home')">←</div>
+      <div class="topbar-logo">SafeYes</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="content">
+      <div class="h2">Rejoindre une session</div>
+      <div class="subtitle">L'autre personne a créé une session. Saisissez le code à 4 chiffres qu'elle vous a communiqué.</div>
+      <input type="text" id="joinCodeInput" placeholder="0000" maxlength="4" inputmode="numeric"
+        style="text-align:center; font-size:36px; letter-spacing:12px; font-weight:700; margin-bottom:20px; padding:20px;">
+      <button class="btn btn-primary" onclick="joinWithCode()">
+        🔗 &nbsp;Rejoindre
+      </button>
+      <button class="btn btn-ghost" onclick="goTo('home')">Annuler</button>
+    </div>
+    <div class="bottom-pad"></div>
+  </div>
+
 </div><!-- /app -->
 
 <script>
@@ -936,6 +949,14 @@
     document.getElementById('pairStatus').innerHTML = '<span class="badge badge-green">● Connecté</span>';
     showToast('✓ Personne B connectée !');
     setTimeout(() => goTo('video'), 1200);
+  }
+
+  function startAsA() {
+    goTo('pairing');
+  }
+
+  function showJoinScreen() {
+    goTo('join');
   }
 
   function joinWithCode() {
@@ -1190,35 +1211,12 @@
   }
 
   function showStopAlert(word) {
-    // Afficher une alerte plein écran temporaire
     const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: fixed; inset: 0; z-index: 9999;
-      background: rgba(220,38,38,0.95);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      font-family: Space Grotesk, sans-serif;
-      animation: fadeInAlert 0.2s ease;
-    `;
-    overlay.innerHTML = \`
-      <div style="font-size:64px; margin-bottom:16px;">🛑</div>
-      <div style="font-size:28px; font-weight:700; color:#fff; margin-bottom:8px;">ARRÊT</div>
-      \${word ? \`<div style="font-size:18px; color:rgba(255,255,255,0.85); margin-bottom:8px;">Mot d'arrêt : <b>\${word}</b></div>\` : ''}
-      <div style="font-size:14px; color:rgba(255,255,255,0.7);">L'autre personne a mis fin à la session</div>
-    \`;
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(220,38,38,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Inter,sans-serif;';
+    const wordLine = word ? '<div style="font-size:18px;color:rgba(255,255,255,0.85);margin-bottom:8px;">Mot d'arrêt : <b>' + word + '</b></div>' : '';
+    overlay.innerHTML = '<div style="font-size:64px;margin-bottom:16px;">🛑</div><div style="font-size:28px;font-weight:700;color:#fff;margin-bottom:8px;">ARRÊT</div>' + wordLine + '<div style="font-size:14px;color:rgba(255,255,255,0.7);">L'autre personne a mis fin à la session</div>';
     document.body.appendChild(overlay);
-    setTimeout(() => overlay.remove(), 3500);
+    setTimeout(function() { overlay.remove(); }, 3500);
   }
-  // ── Fin WebSocket ───────────────────────────────────────
 
-  // Splash
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const splash = document.getElementById('splash');
-      splash.style.opacity = '0';
-      setTimeout(() => splash.style.display = 'none', 400);
-    }, 1400);
-  });
-</script>
-</body>
-</html>
+
