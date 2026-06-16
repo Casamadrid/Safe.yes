@@ -84,7 +84,7 @@ wss.on('connection', (ws) => {
         if (!room) return;
         const peer = currentRole === 'a' ? room.b : room.a;
         if (peer && peer.readyState === 1) {
-          peer.send(JSON.stringify({ type: 'stop_alert' }));
+          peer.send(JSON.stringify({ type: 'stop_alert', word: msg.word || '' }));
         }
         // Supprimer la salle
         rooms.delete(currentRoom);
